@@ -3,13 +3,14 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * Class User
  * @package App\Entity
  * @ORM\Entity
  */
-class User
+class User implements UserInterface
 {
     /**
      * @var int|null
@@ -36,6 +37,20 @@ class User
      * @ORM\Column
      */
     private $name;
+
+    /**
+     * @param string $email
+     * @param string $name
+     * @return static
+     */
+    public static function create(string $email, string $name): self
+    {
+        $user = new self();
+        $user->email = $email;
+        $user->name = $name;
+
+        return $user;
+    }
 
     /**
      * @return int|null
@@ -93,5 +108,27 @@ class User
         $this->name = $name;
     }
 
+    /**
+     * @return string[]
+     */
+    public function getRoles()
+    {
+        return ['ROLE_USER'];
+    }
 
+    public function getSalt()
+    {
+    }
+
+    /**
+     * @return string
+     */
+    public function getUsername()
+    {
+        return $this->email;
+    }
+
+    public function eraseCredentials()
+    {
+    }
 }

@@ -39,9 +39,26 @@ class Comment
 
     /**
      * @var Post
-     * @ORM\ManyToMany(targetEntity="Post")
+     * @ORM\ManyToOne(targetEntity="Post")
+     * @ORM\JoinColumn(onDelete="CASCADE")
      */
     private $post;
+
+    /**
+     * @param string $message
+     * @param User $author
+     * @param Post $post
+     * @return static
+     */
+    public static function create(string $message, User $author, Post $post): self
+    {
+        $comment = new self();
+        $comment->message = $message;
+        $comment->author = $author;
+        $comment->post = $post;
+
+        return $comment;
+    }
 
     /**
      * Comment constructor.
