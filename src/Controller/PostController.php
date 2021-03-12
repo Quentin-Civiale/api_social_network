@@ -12,6 +12,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 
 /**
@@ -59,13 +60,20 @@ class PostController
      * @param SerializerInterface $serializer
      * @param EntityManagerInterface $entityManager
      * @param UrlGeneratorInterface $urlGenerator
+     * @param ValidatorInterface $validator
      * @return JsonResponse
      */
-    public function post(Request $request, SerializerInterface $serializer, EntityManagerInterface $entityManager, UrlGeneratorInterface $urlGenerator): JsonResponse
+    public function post(Request $request, SerializerInterface $serializer, EntityManagerInterface $entityManager, UrlGeneratorInterface $urlGenerator, ValidatorInterface $validator): JsonResponse
     {
         /** @var Post $post */
         $post = $serializer->deserialize($request->getContent(), Post::class, 'json');
         $post->setAuthor($entityManager->getRepository(User::class)->findOneBy([]));
+
+        $errors = $validator->validate($post);
+
+        if ($errors->count() > 0) {
+            return new JsonResponse($serializer->serialize($errors, 'json'), JsonResponse::HTTP_BAD_REQUEST, [], true);
+        }
 
         $entityManager->persist($post);
         $entityManager->flush();
@@ -84,11 +92,18 @@ class PostController
      * @param Request $request
      * @param SerializerInterface $serializer
      * @param EntityManagerInterface $entityManager
+     * @param ValidatorInterface $validator
      * @return JsonResponse
      */
-    public function put(Post $post, Request $request, SerializerInterface $serializer, EntityManagerInterface $entityManager): JsonResponse
+    public function put(Post $post, Request $request, SerializerInterface $serializer, EntityManagerInterface $entityManager, ValidatorInterface $validator): JsonResponse
     {
         $serializer->deserialize($request->getContent(), Post::class, 'json', [AbstractNormalizer::OBJECT_TO_POPULATE => $post]);
+
+        $errors = $validator->validate($post);
+
+        if ($errors->count() > 0) {
+            return new JsonResponse($serializer->serialize($errors, 'json'), JsonResponse::HTTP_BAD_REQUEST, [], true);
+        }
 
         $entityManager->flush();
 
